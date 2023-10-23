@@ -5,8 +5,7 @@ const { NotFoundError, UnauthorizedError } = require("../expressError");
 const db = require("../db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { BCRYPT_WORK_FACTOR, SECRET_KEY } = require("../config");
-const moment = require("moment");
+const { BCRYPT_WORK_FACTOR } = require("../config");
 
 class User {
 
@@ -16,14 +15,18 @@ class User {
 
   static async register({ username, password, first_name, last_name, phone }) {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
-    // const currentTime = new Date();
-    const currentTime = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
 
     const result = await db.query(`
-    INSERT INTO users (username, password, first_name, last_name, phone, join_at)
-    VALUES ($1, $2, $3, $4, $5, $6)
+    INSERT INTO users (username,
+                       password,
+                       first_name,
+                       last_name,
+                       phone,
+                       last_login_at,
+                       join_at)
+    VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     RETURNING username, password, first_name, last_name, phone`,
-      [username, hashedPassword, first_name, last_name, phone, currentTime]);
+      [username, hashedPassword, first_name, last_name, phone]);
 
     return result.rows[0];
   }
@@ -35,19 +38,22 @@ class User {
     SELECT password FROM users WHERE username = $1`, [username]);
 
     const user = result.rows[0];
-    if (user) {
-      return await bcrypt.compare(password, user.password);
-    }
-    throw new UnauthorizedError("Invalid username");
+
+    return user && await bcrypt.compare(password, user.password)
+
   }
 
   /** Update last_login_at for user */
 
   static async updateLoginTimestamp(username) {
-    // const currentTime = new Date();
-    const currentTime = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
-    await db.query(`
-    UPDATE users SET last_login_at = $1 WHERE username = $2`, [currentTime, username]);
+
+    const result = await db.query(`
+    UPDATE users SET last_login_at = CURRENT_TIMESTAMP
+    WHERE username = $1
+    RETURNING username`, [username]);
+
+    if(!result.rows[0]) throw new NotFoundError(`${username} not found.`)
+
 
   }
 
@@ -56,7 +62,9 @@ class User {
 
   static async all() {
     const results = await db.query(`
-    SELECT username, first_name, last_name FROM users`);
+    SELECT username, first_name, last_name
+    FROM users
+    ORDER BY username`);
 
     return results.rows;
   }
