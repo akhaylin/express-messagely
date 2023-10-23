@@ -1,9 +1,8 @@
 "use strict";
 
 /** User of the site. */
-const { NotFoundError, UnauthorizedError } = require("../expressError");
+const { NotFoundError } = require("../expressError");
 const db = require("../db");
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { BCRYPT_WORK_FACTOR } = require("../config");
 
@@ -27,7 +26,7 @@ class User {
     VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     RETURNING username, password, first_name, last_name, phone`,
       [username, hashedPassword, first_name, last_name, phone]);
-
+    console.log("IN REGISTER",result.rows[0]);
     return result.rows[0];
   }
 
