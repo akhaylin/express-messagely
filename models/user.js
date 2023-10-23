@@ -108,7 +108,7 @@ class User {
 
     if(!mList) throw new NotFoundError(`No messages from ${username}`)
 
-    let messages = mList.map((m) => {
+    let messages = mList.map(m => ({
       id: m.id,
       to_user: {
         username: m.username,
@@ -119,7 +119,9 @@ class User {
       body: m.body,
       sent_at: m.sent_at,
       read_at: m.read_at
-    })
+    }))
+
+    return messages;
   }
 
   /** Return messages to this user.
