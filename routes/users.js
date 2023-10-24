@@ -10,6 +10,7 @@ const { all, get, messagesFrom, messagesTo } = require("../models/user");
  *
  * => {users: [{username, first_name, last_name}, ...]}
  *
+ * Auth requirements: any logged in user
  **/
 router.get('/', ensureLoggedIn, async function (req, res, next){
   const users = await all();
@@ -22,8 +23,9 @@ router.get('/', ensureLoggedIn, async function (req, res, next){
  *
  * => {user: {username, first_name, last_name, phone, join_at, last_login_at}}
  *
+ * Auth requirements: logged in user must match req.params.username
  **/
-router.get('/:username', ensureLoggedIn, ensureCorrectUser, async function (req, res, next){
+router.get('/:username', ensureCorrectUser, async function (req, res, next){
   const username = req.params.username
   const user = await get(username)
 
@@ -39,8 +41,9 @@ router.get('/:username', ensureLoggedIn, ensureCorrectUser, async function (req,
  *                 read_at,
  *                 from_user: {username, first_name, last_name, phone}}, ...]}
  *
+ * Auth requirements: logged in user must match req.params.username
  **/
-router.get('/:username/to', ensureLoggedIn, ensureCorrectUser, async function (req, res, next){
+router.get('/:username/to', ensureCorrectUser, async function (req, res, next){
   const username = req.params.username;
   const messages = await messagesTo(username)
 
@@ -55,11 +58,12 @@ router.get('/:username/to', ensureLoggedIn, ensureCorrectUser, async function (r
  *                 read_at,
  *                 to_user: {username, first_name, last_name, phone}}, ...]}
  *
+ * Auth requirements: logged in user must match req.params.username
  **/
-router.get('/:username/from', ensureLoggedIn, ensureCorrectUser, async function (req, res, next){
+router.get('/:username/from', ensureCorrectUser, async function (req, res, next){
   const username = req.params.username;
   const messages = await messagesFrom(username)
-   
+
   return res.json({ messages })
 })
 
