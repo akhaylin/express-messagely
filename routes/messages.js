@@ -2,6 +2,9 @@
 
 const Router = require("express").Router;
 const router = new Router();
+const { authenticateJWT, ensureLoggedIn, ensureCorrectUser } = require("../middleware/auth")
+const { create, markRead, get } = require("../models/message");
+const { UnauthorizedError } = require("../expressError");
 
 /** GET /:id - get detail of message.
  *
@@ -15,6 +18,17 @@ const router = new Router();
  * Makes sure that the currently-logged-in users is either the to or from user.
  *
  **/
+router.get("/:id",ensureLoggedIn, async function (req, res, next) {
+  const currentUser = res.locals.user.username
+  const id = req.params.id
+
+  const message = await get(id)
+
+  if (message.from_user.username === currentUser  || message.to_user.username === currentUser){
+    return res.json({ message })
+  } throw new UnauthorizedError("Must be an associated user")
+
+})
 
 
 /** POST / - post message.
