@@ -15,10 +15,10 @@ router.post("/login", async function (req, res, next) {
 
   const { username, password } = req.body;
 
-  console.log("AUTH", await authenticate(username, password));
   if (await authenticate(username, password)) {
     await updateLoginTimestamp(username);
     const token = jwt.sign({ username }, SECRET_KEY);
+    
     return res.json({ token });
   }
   throw new UnauthorizedError("Invalid username or password.");

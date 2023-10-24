@@ -45,7 +45,7 @@ describe("Test User class", function () {
     let u = await User.get("test");
     expect(u.last_login_at).toBe(null);
 
-    User.updateLoginTimestamp("test");
+    await User.updateLoginTimestamp("test");
     let u2 = await User.get("test");
     expect(u2.last_login_at).not.toBe(null);
   });
